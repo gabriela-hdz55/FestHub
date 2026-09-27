@@ -4,6 +4,10 @@ target/
 !**/src/test/**/target/
 .kotlin
 
+# Local SQLite database
+data/
+*.db
+
 ### IntelliJ IDEA ###
 .idea/
 *.iws
@@ -34,3 +38,4 @@ build/
 
 ### Mac OS ###
 .DS_Store
+Thumbs.db
