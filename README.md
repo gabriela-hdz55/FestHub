@@ -1,3 +1,4 @@
 # FestHub
 
-This is a README
+## How to run
+1. Run the command "mvn compile exec:java"
