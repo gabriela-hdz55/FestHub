@@ -13,19 +13,19 @@ class ConcertEvent {
     static void run(String action, String[] a) {
         switch (action) {
             case "1" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Concert Event created.");
             }
             case "2" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Concert Event read.");
             }
             case "3" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Concert Event updated.");
             }
             case "4" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Concert Event deleted.");
             }
             default -> System.out.println("Unknown action. Allowed: 1, 2, 3, 4");

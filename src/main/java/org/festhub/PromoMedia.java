@@ -13,19 +13,19 @@ class PromoMedia {
     static void run(String action, String[] a) {
         switch (action) {
             case "1" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media created.");
             }
             case "2" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media read.");
             }
             case "3" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media updated.");
             }
             case "4" -> {
-                if (!hasArgs(a, 2)) return;
+                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media deleted.");
             }
             default -> System.out.println("Unknown action. Allowed: 1, 2, 3, 4");

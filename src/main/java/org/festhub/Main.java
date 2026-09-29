@@ -11,7 +11,7 @@ public class Main {
 
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
-                System.out.print("<festhub> ");
+                System.out.print("<FestHub> ");
                 String input = scanner.nextLine().trim();
 
                 if (input.isEmpty()) continue;
