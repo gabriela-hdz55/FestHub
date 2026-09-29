@@ -16,7 +16,7 @@ public final class Database {
         new File("data").mkdirs();
 
         //connect to lite
-        Connection connection = 
+        Connection connection =
                 DriverManager.getConnection(DATABASE_URL);
 
         try (Statement statement = connection.createStatement()){
