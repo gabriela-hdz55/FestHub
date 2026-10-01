@@ -1,4 +1,5 @@
 package org.festhub;
+import java.util.Scanner;
 
 class PromoMedia {
     // Checks if there are enough parameters for operation. Note: 2 is placeholder
@@ -10,22 +11,18 @@ class PromoMedia {
         return true;
     }
 
-    static void run(String action, String[] a) {
+    static void run(String action, Scanner scanner) {
         switch (action) {
             case "1" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media created.");
             }
             case "2" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media read.");
             }
             case "3" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media updated.");
             }
             case "4" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Promotional Media deleted.");
             }
             default -> System.out.println("Unknown action. Allowed: 1, 2, 3, 4");

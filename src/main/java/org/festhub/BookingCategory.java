@@ -1,4 +1,5 @@
 package org.festhub;
+import java.util.Scanner;
 
 class BookingCategory {
     // Checks if there are enough parameters for operation. Note: 2 is placeholder
@@ -10,22 +11,18 @@ class BookingCategory {
         return true;
     }
 
-    static void run(String action, String[] a) {
+    static void run(String action, Scanner scanner) {
         switch (action) {
             case "1" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Festival Booking Category created.");
             }
             case "2" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Festival Booking Category read.");
             }
             case "3" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Festival Booking Category updated.");
             }
             case "4" -> {
-                if (!hasArgs(a, 0)) return;
                 System.out.println("Festival Booking Category deleted.");
             }
             default -> System.out.println("Unknown action. Allowed: 1, 2, 3, 4");

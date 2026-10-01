@@ -19,15 +19,14 @@ public class Main {
                 if (input.equalsIgnoreCase("help")) { printHelp(); continue; }
 
                 String[] t = input.split("\\s+");
-                if (t.length < 2) { System.out.println("Expected: [type] [action] [args...]"); continue; }
-                String[] a = Arrays.copyOfRange(t, 2, t.length);
+                if (t.length < 1) { System.out.println("Expected: [type] [action]"); continue; }
 
                 try {
                     switch (t[0]) {
-                        case "1" -> ConcertEvent.run(t[1], a);
-                        case "2" -> Artist.run(t[1], a);
-                        case "3" -> BookingCategory.run(t[1], a);
-                        case "4" -> PromoMedia.run(t[1], a);
+                        case "1" -> ConcertEvent.run(t[1], scanner);
+                        case "2" -> Artist.run(t[1], scanner);
+                        case "3" -> BookingCategory.run(t[1], scanner);
+                        case "4" -> PromoMedia.run(t[1], scanner);
                         default  -> System.out.println("Unknown record type. Allowed: 1, 2, 3, 4");
                     }
                 } catch (NumberFormatException e) {
