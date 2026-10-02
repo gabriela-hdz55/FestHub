@@ -1,6 +1,7 @@
 package org.festhub;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Scanner;
 import java.util.UUID;
@@ -24,7 +25,7 @@ class ConcertEvent {
                 createConcertEvent(scanner);
             }
             case "2" -> {
-                System.out.println("Concert Event read.");
+                readConcertEvent(scanner);
             }
             case "3" -> {
                 System.out.println("Concert Event updated.");
@@ -263,8 +264,74 @@ class ConcertEvent {
     }
 
     private static void readConcertEvent(Scanner scanner) {
-        // tbd
-    }   
+        while (true) {
+            System.out.print("Enter Concert Event ID to read: ");
+            String input = scanner.nextLine().trim();
+
+            // if field is empty return to main menu
+            if (input.isEmpty()) {
+                System.out.println("No ID entered. Returning to main menu.");
+                return;
+            }
+
+            // validate UUID format
+            String validatedId = validateUuid(input);
+            if (validatedId == null) {
+                System.out.println("Invalid UUID format. Please enter a valid UUID.");
+                continue; // ask for input again
+            }
+
+            // query the database for the concert event with the given ID
+            String sql = "SELECT * FROM concert_event WHERE id = ?";
+            try (var connection = Database.getConnection();
+                 var preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, validatedId);
+                var resultSet = preparedStatement.executeQuery();
+
+                if (resultSet.next()) {
+                    // display concert event details
+                    System.out.println("Concert Event Details:");
+                    System.out.println("ID: " + resultSet.getString("id"));
+                    System.out.println("Name: " + resultSet.getString("name"));
+                    System.out.println("Description: " + resultSet.getString("description"));
+                    System.out.println("Available Tickets: " + resultSet.getInt("available_tickets"));
+                    // convert ticket price from cents to dollars for display
+                    Long priceCents = resultSet.getLong("ticket_price_cents");
+                    BigDecimal priceDollars = BigDecimal.valueOf(priceCents).movePointLeft(2).setScale(2, RoundingMode.UNNECESSARY);
+                    System.out.println("Ticket Price: $" + priceDollars);
+
+                    // read associated artist IDs
+                    readAssociatedIds(connection, validatedId, "event_artist", "artist_id");
+                    // read associated booking category IDs
+                    readAssociatedIds(connection, validatedId, "event_category", "category_id");
+                    // read associated promo media IDs
+                    readAssociatedIds(connection, validatedId, "promo_media", "id");
+                } else {
+                    System.out.println("No Concert Event found with ID: " + validatedId);
+                }
+                
+                System.out.println("Finished reading Concert Event. Returning to main menu.");
+            } catch (Exception e) {
+                System.out.println("Database error while reading Concert Event: " + e.getMessage());
+            }
+            break;
+        }
+    }
+
+    private static void readAssociatedIds(Connection connection, String eventId, String tableName, String columnName) {
+        String sql = "SELECT " + columnName + " FROM " + tableName + " WHERE event_id = ?";
+        try (var preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setString(1, eventId);
+            var resultSet = preparedStatement.executeQuery();
+
+            System.out.println("Associated IDs from " + tableName + ":");
+            while (resultSet.next()) {
+                System.out.println(resultSet.getString(columnName));
+            }
+        } catch (Exception e) {
+            System.out.println("Database error while reading associated IDs from " + tableName + ": " + e.getMessage());
+        }
+    }
 
     private static void updateConcertEvent(Scanner scanner) {
         // tbd
