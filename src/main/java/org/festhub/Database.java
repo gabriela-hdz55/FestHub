@@ -42,6 +42,11 @@ public final class Database {
         }
     }
 
+    // public method to get a connection to the database
+    public static Connection getConnection() throws SQLException {
+        return connect();
+    }
+
     private static void createConcertEventTable(Connection connection) throws SQLException {
         try (Statement statement = connection.createStatement()){
             statement.execute(
