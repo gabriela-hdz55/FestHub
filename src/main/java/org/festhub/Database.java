@@ -11,7 +11,7 @@ public final class Database {
 
     private Database(){}
 
-    private static Connection connect() throws SQLException {
+    static Connection connect() throws SQLException {
         //Makes a new data directory if it doesn't exist
         new File("data").mkdirs();
 
