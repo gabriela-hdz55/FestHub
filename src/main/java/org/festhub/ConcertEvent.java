@@ -144,7 +144,7 @@ class ConcertEvent {
     private static boolean checkIdExists(String id, String tableName) {
         String sql = "SELECT COUNT(1) FROM " + tableName + " WHERE id = ?";
 
-        try (var connection = Database.getConnection();
+        try (var connection = Database.connect();
              var preparedStatement = connection.prepareStatement(sql)) {
             // set the ID parameter in the prepared statement
             preparedStatement.setString(1, id);
@@ -211,7 +211,7 @@ class ConcertEvent {
 
         // insert concert event into database
         String sql = "INSERT INTO concert_event (id, name, description, available_tickets, ticket_price_cents) VALUES (?, ?, ?, ?, ?)";
-        try (var connection = Database.getConnection();
+        try (var connection = Database.connect();
              var preparedStatement = connection.prepareStatement(sql)) {
             preparedStatement.setString(1, id);
             preparedStatement.setString(2, name);
@@ -245,7 +245,7 @@ class ConcertEvent {
 
             // query the database for the concert event with the given ID
             String sql = "SELECT * FROM concert_event WHERE id = ?";
-            try (var connection = Database.getConnection();
+            try (var connection = Database.connect();
                  var preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, validatedId);
                 var resultSet = preparedStatement.executeQuery();
@@ -324,7 +324,7 @@ class ConcertEvent {
                     "ticket_price_cents = COALESCE(?, ticket_price_cents) " +
                     "WHERE id = ?";
 
-            try (var connection = Database.getConnection()) {
+            try (var connection = Database.connect()) {
                 connection.setAutoCommit(false);
                 try {
                     // update concert event fields
@@ -375,7 +375,7 @@ class ConcertEvent {
 
             // delete the concert event with the given ID from the database
             String sql = "DELETE FROM concert_event WHERE id = ?";
-            try (var connection = Database.getConnection();
+            try (var connection = Database.connect();
                  var preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, validatedId);
                 int rowsAffected = preparedStatement.executeUpdate();
@@ -418,7 +418,7 @@ class ConcertEvent {
             case "6" -> {
                 // manageBookingCategories(scanner);
             }
-            default -> System.out.println("Unknown action. Allowed: 1, 2, 3, 4, 5");
+            default -> System.out.println("Unknown action. Allowed: 1, 2, 3, 4, 5, 6");
         }
     }
 }
