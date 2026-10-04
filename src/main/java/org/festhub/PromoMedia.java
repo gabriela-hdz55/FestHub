@@ -1,4 +1,5 @@
 package org.festhub;
+
 import java.util.Scanner;
 
 class PromoMedia {

@@ -14,12 +14,20 @@ public class Main {
                 System.out.print("<FestHub> ");
                 String input = scanner.nextLine().trim();
 
-                if (input.isEmpty()) continue;
-                if (input.equalsIgnoreCase("exit")) break;
-                if (input.equalsIgnoreCase("help")) { printHelp(); continue; }
+                if (input.isEmpty())
+                    continue;
+                if (input.equalsIgnoreCase("exit"))
+                    break;
+                if (input.equalsIgnoreCase("help")) {
+                    printHelp();
+                    continue;
+                }
 
                 String[] t = input.split("\\s+");
-                if (t.length < 1) { System.out.println("Expected: [type] [action]"); continue; }
+                if (t.length < 1) {
+                    System.out.println("Expected: [type] [action]");
+                    continue;
+                }
 
                 try {
                     switch (t[0]) {
@@ -27,20 +35,28 @@ public class Main {
                         case "2" -> Artist.run(t[1], scanner);
                         case "3" -> BookingCategory.run(t[1], scanner);
                         case "4" -> PromoMedia.run(t[1], scanner);
-                        default  -> System.out.println("Unknown record type. Allowed: 1, 2, 3, 4");
+                        default -> System.out.println("Unknown record type. Allowed: 1, 2, 3, 4");
                     }
                 } catch (NumberFormatException e) {
                     System.out.println("Error: expected a number (" + e.getMessage() + ")");
                 }
-//                catch (SQLException e) {
-//                    System.out.println("Database error: " + e.getMessage());
-//                }
+                // catch (SQLException e) {
+                // System.out.println("Database error: " + e.getMessage());
+                // }
             }
         }
     }
 
     private static void printHelp() {
-        System.out.println("Types: 1=Concert Events, 2=Artists, 3=Booking Categories, 4=Promo Media");
-        System.out.println("Actions: 1=Create, 2=Read, 3=Update, 4=Delete");
+        System.out.println(
+                "Types: 1=Concert Events, 2=Artists, " +
+                        "3=Booking Categories, 4=Promo Media");
+
+        System.out.println(
+                "Actions: 1=Create, 2=Read, " +
+                        "3=Update, 4=Delete");
+
+        System.out.println(
+                "Booking Categories: 5=Manage Events");
     }
 }

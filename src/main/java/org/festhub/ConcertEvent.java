@@ -1,4 +1,5 @@
 package org.festhub;
+
 import java.util.Scanner;
 
 class ConcertEvent {
@@ -36,7 +37,7 @@ class ConcertEvent {
 
     private static void readConcertEvent(Scanner scanner) {
         // tbd
-    }   
+    }
 
     private static void updateConcertEvent(Scanner scanner) {
         // tbd
