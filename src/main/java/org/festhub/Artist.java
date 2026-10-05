@@ -14,6 +14,7 @@ class Artist {
     private String artistName;
     private String bookingContact;
     private String[] eventIDs; // exists in other classes; ensure sync
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"; // regex expression for expected email address format
 
 // ------------------------------------------------------------------- //
 
@@ -83,8 +84,7 @@ class Artist {
     // Input validation for 'BookingContact' - must be valid email format
     public void setBookingContact(String bookingContact){
 
-        String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"; // regex expression for expected email address format
-        if (bookingContact == null || !bookingContact.matches(emailRegex)){
+        if (bookingContact == null || !bookingContact.matches(EMAIL_REGEX)){
             throw new IllegalArgumentException("Booking contact must be a valid email address."); 
         }
         this.bookingContact = bookingContact;
@@ -99,7 +99,7 @@ class Artist {
     //*________________ C-R-U-D OPERATIONS __________________*//
     
     // Create an Artist instance/object
-    public String createArtist(String artistName, String bookingContact, String artistID, Connection connection){
+    public static String createArtist(String artistName, String bookingContact, String artistID, Connection connection){
 
         Artist newArtist;
 
@@ -127,7 +127,7 @@ class Artist {
     }
 
         // Read out an Artist object
-    public Artist readArtist(String artistID, Connection connection){
+    public static Artist readArtist(String artistID, Connection connection){
 
         String sql = "SELECT id, name, booking_contact FROM artist WHERE id = ?";
         Artist fetchedArtist = null;
@@ -152,7 +152,7 @@ class Artist {
     }
 
         // Update an Artist object's parameters
-    public void updateArtist(String artistID, String newName, String newContact, Connection connection){
+    public static void updateArtist(String artistID, String newName, String newContact, Connection connection){
         
         Artist targetArtist = readArtist(artistID, connection);
 
@@ -163,13 +163,12 @@ class Artist {
         // defaulting updated variables to the old data
         String updatedName = targetArtist.getArtistName();
         String updatedContact = targetArtist.getBookingContact();
-        String emailRegex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"; // regex expression for expected email address format
-
+    
         if (newName != null && !newName.isBlank()) {
             updatedName = newName;
         }
         if (newContact != null && !newContact.isBlank()) {
-            if (bookingContact == null || !bookingContact.matches(emailRegex)){
+            if (!newContact.matches(EMAIL_REGEX)){
                 throw new IllegalArgumentException("Booking contact must be a valid email address."); 
             }
             updatedContact = newContact;
@@ -189,7 +188,7 @@ class Artist {
     }
 
         // Delete an Artist object
-    public String deleteArtist(String artistID, Connection connection){
+    public static String deleteArtist(String artistID, Connection connection){
         
         String sql = "DELETE FROM artist WHERE id = ?";
 
@@ -207,9 +206,48 @@ class Artist {
         }
     }
 
+
+
     // Manage Events
-    public void manageEvents(){
-        
+    public static String manageEvents(String artistID, Scanner scanner, Connection connection) {
+    
+        System.out.println("Type 'ADD' to create a link or 'DELETE' to remove it:");
+        String action = scanner.nextLine().trim().toUpperCase();
+
+        System.out.println("Enter the target Event ID:");
+        String eventID = scanner.nextLine().trim();
+
+        if (action.equals("ADD")) {
+            String sql = "INSERT INTO event_artist (artist_id, event_id) VALUES (?, ?)";
+            
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, artistID);
+                pstmt.setString(2, eventID);
+                pstmt.executeUpdate();
+                return "Event linked to artist successfully.";
+            } catch (SQLException e) {
+                return "Failed to add link. It may already exist or IDs are invalid.";
+            }
+            
+        } else if (action.equals("DELETE")) {
+            String sql = "DELETE FROM event_artist WHERE artist_id = ? AND event_id = ?";
+            
+            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+                pstmt.setString(1, artistID);
+                pstmt.setString(2, eventID);
+                
+                if (pstmt.executeUpdate() == 1) {
+                    return "Link deleted successfully.";
+                } else {
+                    return "Deletion unsuccessful; link does not exist.";
+                }
+            } catch (SQLException e) {
+                return "Failed to delete link from database.";
+            }
+            
+        } else {
+            return "Invalid command. Operation cancelled.";
+        }
     }
 
 
