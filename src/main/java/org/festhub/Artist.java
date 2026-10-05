@@ -9,274 +9,211 @@ import java.sql.SQLException;
 
 class Artist {
 
-    // Variable declarations
-    private String artistID;
-    private String artistName;
-    private String bookingContact;
-    private String[] eventIDs; // exists in other classes; ensure sync
-    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"; // regex expression for expected email address format
-
-// ------------------------------------------------------------------- //
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"; // regex expression to validate standard email format
 
 
-/*_____________________ CONSTRUCTORS for new Artist instance/object________________________ */
-
-        // Both 'artistID' AND 'eventIDs' are NOT provided
-    public Artist(String artistName, String bookingContact){
-        setArtistName(artistName);
-        setBookingContact(bookingContact);
-        this.artistID = UUID.randomUUID().toString();
-        this.eventIDs = new String[0];
+    static void run(String action, Scanner scanner) {
+        try{
+            switch (action) {
+                case "1" -> createArtist(scanner);
+                case "2" -> readArtist(scanner);
+                case "3" -> updateArtist(scanner);
+                case "4" -> deleteArtist(scanner);
+                case "5" -> manageEvents(scanner);
+                default -> System.out.println("Allowed actions: 1, 2, 3, 4, 5");
+            }
+        } catch (SQLException | IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+        }
     }
 
-        //  Only 'eventIDs' is NOT provided 
-    public Artist(String artistName, String bookingContact, String artistID){
-        setArtistName(artistName);
-        setBookingContact(bookingContact);
-        this.artistID = artistID;
-        this.eventIDs = new String[0];
-    }
+    //*_______________ ARTIST HELPERS ___________________*//
 
-
-// ----------------------------------------------------------------------------//
-
-
-/*_________In-class METHODS_____________*/
-
-    //*_______________ GETTERS + SETTERS __________________ *//
-
-    public String getArtistID() {
-        return artistID;
-    }
-
-    public void setArtistID(String artistID) {
-        this.artistID = artistID;
-    }
-
-    public String getArtistName() {
-        return artistName;
-    }
-
-    public String getBookingContact() {
-        return bookingContact;
-    }
-
-    public String[] getEventIDs() {
-        return eventIDs;
-    }
-
-    public void setEventIDs(String[] eventIDs) {
-        this.eventIDs = eventIDs;
-    }
-
-
-    //*_______________ INPUT VALIDATORS ___________________*//
-
-        // Input validator for 'artistName' - can't be >2000 chars
-    public void setArtistName(String artistName){
-        if (artistName != null && artistName.length() > 2000){
+    // checks name's character length AND validates the inputted email
+    private static void validate(String name, String contact){
+        if (name == null || name.length() > 2000) {
             throw new IllegalArgumentException("Artist Name cannot exceed 2000 characters.");
         }
-        this.artistName = artistName;
-    }
-
-
-    // Input validation for 'BookingContact' - must be valid email format
-    public void setBookingContact(String bookingContact){
-
-        if (bookingContact == null || !bookingContact.matches(EMAIL_REGEX)){
-            throw new IllegalArgumentException("Booking contact must be a valid email address."); 
+        if (contact == null || !contact.matches(EMAIL_REGEX)){
+            throw new IllegalArgumentException("Booking contact must be a valid email address.");
         }
-        this.bookingContact = bookingContact;
-    }   
-
-        // Input validation for valid Concert Event UUIDs - ???
-    public void setEventIDs(){
-            // TBD
     }
 
+    // helper for Artist selection via UUID
+    private static UUID chooseArtist(Scanner scanner) throws SQLException {
+        System.out.println("\nArtists:");
+
+        if (!Database.list("artist")) {
+            System.out.println("No artists found.");
+            return null;
+        }
+
+        System.out.print("Artist ID: ");
+        String input = scanner.nextLine().trim();
+
+        try {
+            return UUID.fromString(input);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid artist UUID.");
+        }
+    }
 
     //*________________ C-R-U-D OPERATIONS __________________*//
     
     // Create an Artist instance/object
-    public static String createArtist(String artistName, String bookingContact, String artistID, Connection connection){
+    public static void createArtist(Scanner scanner) throws SQLException{
+        System.out.print("Artist Name: ");
+        String name = scanner.nextLine().trim();
 
-        Artist newArtist;
+        System.out.print("Booking Contact (Email): ");
+        String contact = scanner.nextLine().trim();
 
-        if (artistID == null){
-            newArtist = new Artist(artistName, bookingContact);
-        } else {
-            newArtist = new Artist(artistName, bookingContact, artistID);
-        }
+        validate (name, contact);
 
-    // Logic to save new Artist object to database
-        String sql = "INSERT INTO artist (id, name, booking_contact) VALUES (?, ?, ?)";
+        UUID id = UUID.randomUUID();
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, newArtist.getArtistID());
-            pstmt.setString(2, newArtist.getArtistName());
-            pstmt.setString(3, newArtist.getBookingContact());
-
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Cannot save artist to database", e);
-        }
-
-    // returns Artist's UUID
-        return newArtist.getArtistID();
-    }
-
-        // Read out an Artist object
-    public static Artist readArtist(String artistID, Connection connection){
-
-        String sql = "SELECT id, name, booking_contact FROM artist WHERE id = ?";
-        Artist fetchedArtist = null;
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)){
-            pstmt.setString(1, artistID);
-
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                String dbId = rs.getString("id");
-                String dbName = rs.getString("name");
-                String dbContact = rs.getString("booking_contact");
-
-                fetchedArtist = new Artist(dbName, dbContact, dbId);
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to read out artist from the database", e);
-        }
-
-        return fetchedArtist;
-    }
-
-        // Update an Artist object's parameters
-    public static void updateArtist(String artistID, String newName, String newContact, Connection connection){
+        Database.execute(
+            "INSERT INTO artist (id, name, booking_contact) VALUES (?, ?, ?)",
+            id.toString(), name, contact);
         
-        Artist targetArtist = readArtist(artistID, connection);
-
-        if (targetArtist == null){
-            throw new IllegalArgumentException("Artist ID does not exist.");
-        }
-
-        // defaulting updated variables to the old data
-        String updatedName = targetArtist.getArtistName();
-        String updatedContact = targetArtist.getBookingContact();
-    
-        if (newName != null && !newName.isBlank()) {
-            updatedName = newName;
-        }
-        if (newContact != null && !newContact.isBlank()) {
-            if (!newContact.matches(EMAIL_REGEX)){
-                throw new IllegalArgumentException("Booking contact must be a valid email address."); 
-            }
-            updatedContact = newContact;
-        }
-
-        String sql = "UPDATE artist SET name = ?, booking_contact = ? WHERE id = ?";
-
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, updatedName);
-            pstmt.setString(2, updatedContact);
-            pstmt.setString(3, artistID);
-
-            pstmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to update artist's entry in database", e);
-        }
+            System.out.println("Artist created: " + id);
     }
 
-        // Delete an Artist object
-    public static String deleteArtist(String artistID, Connection connection){
+    // Read out an Artist object
+    public static void readArtist(Scanner scanner) throws SQLException {
         
-        String sql = "DELETE FROM artist WHERE id = ?";
+        UUID id = chooseArtist(scanner);
+        if (id == null) return;
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-            pstmt.setString(1, artistID);
+        String sql = """
+                SELECT name, booking_contact
+                FROM artist
+                WHERE id = ?
+                """;
 
-            if (pstmt.executeUpdate() == 1){
-                return "Deletion successful.";
-            } else {
-                return "Deletion unsuccessful; Artist ID does not exist in database.";
-            }
+        try (Connection connection = Database.connect();
+            PreparedStatement statement = connection.prepareStatement(sql)) {
 
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to delete artist entry from database", e);
-        }
-    }
+            statement.setString(1, id.toString());
 
-
-
-    // Manage Events
-    public static String manageEvents(String artistID, Scanner scanner, Connection connection) {
-    
-        System.out.println("Type 'ADD' to create a link or 'DELETE' to remove it:");
-        String action = scanner.nextLine().trim().toUpperCase();
-
-        System.out.println("Enter the target Event ID:");
-        String eventID = scanner.nextLine().trim();
-
-        if (action.equals("ADD")) {
-            String sql = "INSERT INTO event_artist (artist_id, event_id) VALUES (?, ?)";
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setString(1, artistID);
-                pstmt.setString(2, eventID);
-                pstmt.executeUpdate();
-                return "Event linked to artist successfully.";
-            } catch (SQLException e) {
-                return "Failed to add link. It may already exist or IDs are invalid.";
-            }
-            
-        } else if (action.equals("DELETE")) {
-            String sql = "DELETE FROM event_artist WHERE artist_id = ? AND event_id = ?";
-            
-            try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
-                pstmt.setString(1, artistID);
-                pstmt.setString(2, eventID);
-                
-                if (pstmt.executeUpdate() == 1) {
-                    return "Link deleted successfully.";
-                } else {
-                    return "Deletion unsuccessful; link does not exist.";
+            try (ResultSet result = statement.executeQuery()) {
+                if (!result.next()) {
+                    System.out.println("Artist not found.");
+                    return;
                 }
-            } catch (SQLException e) {
-                return "Failed to delete link from database.";
+
+                System.out.println("Artist Name: " + result.getString("name"));
+                System.out.println("Booking Contact: " + result.getString("booking_contact"));
             }
-            
-        } else {
-            return "Invalid command. Operation cancelled.";
         }
     }
+
+    // Update an Artist's database entry
+    public static void updateArtist(Scanner scanner) throws SQLException {
+        UUID id = chooseArtist(scanner);
+        if (id == null) return;
+
+        System.out.print("New Artist Name: ");
+        String name = scanner.nextLine().trim();
+
+        System.out.print("New Booking Contact (Email): ");
+        String contact = scanner.nextLine().trim();
+
+        validate(name, contact);
+
+        int updated = Database.execute(
+                """
+                UPDATE artist
+                SET name = ?, booking_contact = ?
+                WHERE id = ?
+                """,
+                name, contact, id.toString());
+
+        if (updated == 0) {
+            System.out.println("Artist not found.");
+            return;
+        }
+
+        System.out.println("Artist updated.");
+    }
+
+    // Delete an Artist's database entry
+    public static void deleteArtist(Scanner scanner) throws SQLException {
+        UUID id = chooseArtist(scanner);
+        if (id == null) return;
+
+        int deleted = Database.execute(
+                "DELETE FROM artist WHERE id = ?",
+                id.toString());
+
+        if (deleted == 0) {
+            System.out.println("Artist not found.");
+            return;
+        }
+
+        System.out.println("Artist deleted.");
+    }
+
+    // Manage Events (add/delete artist-event relationships)
+    public static void manageEvents(Scanner scanner) throws SQLException {
+        UUID artistId = chooseArtist(scanner);
+        if (artistId == null) return;
+
+        System.out.println();
+        System.out.println("1 = Add Artist to Event");
+        System.out.println("2 = Remove Artist from Event");
+        System.out.println("3 = Cancel");
+        System.out.print("Choose: ");
+
+        switch (scanner.nextLine().trim()) {
+            case "1" -> addEvent(scanner, artistId);
+            case "2" -> removeEvent(scanner, artistId);
+            case "3" -> {}
+            default -> System.out.println("Invalid option.");
+        }
+    }
+
+    // Separate methods for adding and removing event-artist relationships
+        private static void addEvent(Scanner scanner, UUID artistId) throws SQLException {
+            System.out.println();
+            System.out.println("Available Events:");
+
+            if (!Database.list("concert_event")) {
+                System.out.println("No concert events found.");
+                return;
+            }
+
+            System.out.print("Event ID: ");
+            String eventId = scanner.nextLine().trim();
+
+            Database.execute(
+                    "INSERT INTO event_artist(artist_id, event_id) VALUES (?, ?)",
+                    artistId.toString(), eventId);
+
+            System.out.println("Artist linked to event.");
+        }
+
+        private static void removeEvent(Scanner scanner, UUID artistId) throws SQLException {
+            System.out.print("Event ID to remove from this artist: ");
+            String eventId = scanner.nextLine().trim();
+
+            int removed = Database.execute(
+                    """
+                    DELETE FROM event_artist
+                    WHERE artist_id = ? AND event_id = ?
+                    """,
+                    artistId.toString(), eventId);
+
+            if (removed == 0) {
+                System.out.println("That artist is not linked to this event.");
+                return;
+            }
+
+            System.out.println("Artist removed from event.");
+        }
+}
+
 
 
 // -----------------------------------------------------------------------------//
 
-    // Checks if there are enough parameters for operation. Note: 0 is placeholder
-    private static boolean hasArgs(String[] a, int n) {
-        if (a.length < n) {
-            System.out.println("Error: this action requires " + n + " argument(s).");
-            return false;
-        }
-        return true;
-    }
-
-    static void run(String action, Scanner scanner) {
-        switch (action) {
-            case "1" -> {
-                System.out.println("Artist created.");
-            }
-            case "2" -> {
-                System.out.println("Artist read.");
-            }
-            case "3" -> {
-                System.out.println("Artist updated.");
-            }
-            case "4" -> {
-                System.out.println("Artist deleted.");
-            }
-            default -> System.out.println("Unknown action. Allowed: 1, 2, 3, 4");
-        }
-    }
-}
